@@ -1,0 +1,25 @@
+{
+  "name": "thread-mesh-card",
+  "version": "0.3.0",
+  "description": "Interactive Thread mesh topology visualizer for Home Assistant Lovelace",
+  "main": "dist/thread-mesh-card.js",
+  "module": "src/thread-mesh-card.js",
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "deploy": "python3 scripts/deploy.py",
+    "check": "python3 -c \"import json; print('Syntax OK')\""
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-card",
+    "thread",
+    "matter",
+    "openthread",
+    "topology",
+    "d3",
+    "force-graph"
+  ],
+  "author": "Ivan Alekseev",
+  "license": "MIT"
+}
