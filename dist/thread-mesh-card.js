@@ -1389,7 +1389,7 @@
     const isLowBatt = (node.battery !== null && node.battery !== undefined && node.battery <= 15);
     const battIcon = isLowBatt ? '🪫 ' : '🔋';
     const line1 = node.shortName || node.friendlyName || `Node ${node.id}`;
-    const line2 = `📍 ${node.areaName || 'Unassigned'}` + (node.battery !== null && node.battery !== undefined ? ` • ${battIcon}${node.battery}%` : '');
+    const line2 = (node.areaName || 'Unassigned') + (node.battery !== null && node.battery !== undefined ? ` • ${battIcon}${node.battery}%` : '');
 
     let textWidth1, textWidth2;
     if (ctx) {
@@ -1526,7 +1526,7 @@
     ctx.fillText(bounds.line1, bounds.boxX + bounds.boxWidth / 2, bounds.boxY + (3 / scale));
 
     ctx.font = `500 ${bounds.fontSize2}px ${bounds.fontFamily}`;
-    ctx.fillStyle = node.areaColor?.text || '#94a3b8';
+    ctx.fillStyle = '#94a3b8';
     ctx.fillText(bounds.line2, bounds.boxX + bounds.boxWidth / 2, bounds.boxY + bounds.fontSize1 + (4.5 / scale));
 
     ctx.restore();
@@ -1612,9 +1612,9 @@
     if (titleEl) titleEl.textContent = node.shortName || node.friendlyName;
     if (areaEl) {
       areaEl.textContent = node.areaName || 'Unassigned';
-      areaEl.style.backgroundColor = node.areaColor?.bg || 'rgba(255,255,255,0.1)';
-      areaEl.style.color = node.areaColor?.text || '#fff';
-      areaEl.style.border = `1px solid ${node.areaColor?.border || '#666'}`;
+      areaEl.style.backgroundColor = 'rgba(255,255,255,0.08)';
+      areaEl.style.color = '#cbd5e1';
+      areaEl.style.border = '1px solid rgba(255,255,255,0.12)';
     }
 
     // Calculate hops and route summary

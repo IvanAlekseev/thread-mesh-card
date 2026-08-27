@@ -38,9 +38,9 @@ export function updateInspectorHud(cardInstance, node) {
   if (titleEl) titleEl.textContent = node.shortName || node.friendlyName;
   if (areaEl) {
     areaEl.textContent = node.areaName || 'Unassigned';
-    areaEl.style.backgroundColor = node.areaColor?.bg || 'rgba(255,255,255,0.1)';
-    areaEl.style.color = node.areaColor?.text || '#fff';
-    areaEl.style.border = `1px solid ${node.areaColor?.border || '#666'}`;
+    areaEl.style.backgroundColor = 'rgba(255,255,255,0.08)';
+    areaEl.style.color = '#cbd5e1';
+    areaEl.style.border = '1px solid rgba(255,255,255,0.12)';
   }
 
   // Calculate hops and route summary

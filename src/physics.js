@@ -159,7 +159,7 @@ export function calculateNodeLabelBounds(node, scale, ctx) {
   const isLowBatt = (node.battery !== null && node.battery !== undefined && node.battery <= 15);
   const battIcon = isLowBatt ? '🪫 ' : '🔋';
   const line1 = node.shortName || node.friendlyName || `Node ${node.id}`;
-  const line2 = `📍 ${node.areaName || 'Unassigned'}` + (node.battery !== null && node.battery !== undefined ? ` • ${battIcon}${node.battery}%` : '');
+  const line2 = (node.areaName || 'Unassigned') + (node.battery !== null && node.battery !== undefined ? ` • ${battIcon}${node.battery}%` : '');
 
   let textWidth1, textWidth2;
   if (ctx) {
@@ -297,7 +297,7 @@ export function drawNodeWithDynamicLabel(node, ctx, scale, state) {
   ctx.fillText(bounds.line1, bounds.boxX + bounds.boxWidth / 2, bounds.boxY + (3 / scale));
 
   ctx.font = `500 ${bounds.fontSize2}px ${bounds.fontFamily}`;
-  ctx.fillStyle = node.areaColor?.text || '#94a3b8';
+  ctx.fillStyle = '#94a3b8';
   ctx.fillText(bounds.line2, bounds.boxX + bounds.boxWidth / 2, bounds.boxY + bounds.fontSize1 + (4.5 / scale));
 
   ctx.restore();
