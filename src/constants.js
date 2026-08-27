@@ -1,4 +1,4 @@
-export const CARD_VERSION = '0.3.0';
+export const CARD_VERSION = '0.3.1';
 export const SCRIPT_URL = '/local/libs/force-graph.min.js';
 
 export const AREA_PALETTE = [

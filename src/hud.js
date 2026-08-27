@@ -33,7 +33,7 @@ export function updateInspectorHud(cardInstance, node) {
   const openHaBtn = root.getElementById('hudOpenHaBtn');
 
   if (iconEl) {
-    iconEl.textContent = node.is_preferred_tbr ? '👑' : (node.is_border_router ? '🔷' : (node.shape === 'square' ? '🔌' : '📡'));
+    iconEl.textContent = node.is_preferred_tbr ? '👑' : (node.is_border_router ? '🟣' : (node.role === 'router' ? '🔌' : '📡'));
   }
   if (titleEl) titleEl.textContent = node.shortName || node.friendlyName;
   if (areaEl) {
@@ -54,7 +54,7 @@ export function updateInspectorHud(cardInstance, node) {
   });
 
   const isBatteryDevice = (node.battery !== null && node.battery !== undefined) || 
-                          node.shape === 'circle' || 
+                          node.role === 'end_device' || 
                           node.role === 'battery_leaf' || 
                           (node.roleLabel && node.roleLabel.toLowerCase().includes('battery')) ||
                           (node.roleLabel && node.roleLabel.toLowerCase().includes('sleepy'));
@@ -120,7 +120,7 @@ export function updateInspectorHud(cardInstance, node) {
   }).length;
 
   if (densityEl) {
-    densityEl.textContent = `${node.thread_version || 'Thread 1.3'} • ${neighborCount} neighbor${neighborCount === 1 ? '' : 's'}`;
+    densityEl.textContent = `Thread (NEST-PAN-7BF9) • ${neighborCount} neighbor${neighborCount === 1 ? '' : 's'}`;
   }
 
   if (openHaBtn) {

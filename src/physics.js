@@ -18,12 +18,12 @@ export function seedInitialPositions(nodes, edges, baseRadius = 350) {
     const tgtNode = nodeMap.get(tgtId);
     if (!srcNode || !tgtNode) return;
 
-    if (srcNode.shape === 'circle' && tgtNode.shape !== 'circle') {
+    if (srcNode.role === 'end_device' && tgtNode.role !== 'end_device') {
       srcNode._parent = tgtNode;
       parentByChild.set(srcId, tgtNode);
       if (!childrenByParent.has(tgtId)) childrenByParent.set(tgtId, []);
       childrenByParent.get(tgtId).push(srcNode);
-    } else if (tgtNode.shape === 'circle' && srcNode.shape !== 'circle') {
+    } else if (tgtNode.role === 'end_device' && srcNode.role !== 'end_device') {
       tgtNode._parent = srcNode;
       parentByChild.set(tgtId, srcNode);
       if (!childrenByParent.has(srcId)) childrenByParent.set(srcId, []);
@@ -51,7 +51,7 @@ export function seedInitialPositions(nodes, edges, baseRadius = 350) {
 
   // 3. Position Routers & TBRs in inner ring (38% R)
   const routersByArea = new Map();
-  nodes.filter(n => n.shape !== 'circle').forEach(rNode => {
+  nodes.filter(n => n.role !== 'end_device').forEach(rNode => {
     const aName = rNode.areaName || 'Unassigned';
     if (!routersByArea.has(aName)) routersByArea.set(aName, []);
     routersByArea.get(aName).push(rNode);
@@ -78,7 +78,7 @@ export function seedInitialPositions(nodes, edges, baseRadius = 350) {
   });
 
   // 4. Position Leaf End Devices with Wide Parent-Relative Outward Fan-Out (58% - 72% R)
-  const leaves = nodes.filter(n => n.shape === 'circle');
+  const leaves = nodes.filter(n => n.role === 'end_device');
   const leavesByParent = new Map();
   const orphanLeaves = [];
 
@@ -177,7 +177,7 @@ export function calculateNodeLabelBounds(node, scale, ctx) {
   const boxHeight = fontSize1 + fontSize2 + (10 / s);
 
   let angle;
-  if (node.shape === 'circle') {
+  if (node.role === 'end_device') {
     if (node._parent && typeof node._parent.x === 'number' && typeof node._parent.y === 'number') {
       const dx = (node.x || 0) - node._parent.x;
       const dy = (node.y || 0) - node._parent.y;
@@ -208,7 +208,7 @@ export function calculateNodeLabelBounds(node, scale, ctx) {
   let boxCenterY = (node.y || 0) + dist * sinA;
 
   // Add subtle sibling vertical stagger if multiple leaves share a parent
-  if (node.shape === 'circle' && node._siblingTotal > 1) {
+  if (node.role === 'end_device' && node._siblingTotal > 1) {
     if (node._siblingIdx === 0) {
       boxCenterY -= (3 / s);
     } else if (node._siblingIdx === node._siblingTotal - 1) {
@@ -237,9 +237,20 @@ export function drawNodeWithDynamicLabel(node, ctx, scale, state) {
   const y = node.y || 0;
 
   // 1. Render Node Shape
-  ctx.fillStyle = node.roleColor || '#38bdf8';
-  ctx.strokeStyle = isSelected ? '#ffffff' : (isHovered ? '#38bdf8' : 'rgba(15, 23, 42, 0.85)');
-  ctx.lineWidth = (isSelected || isHovered ? 2.5 : 1.2) / scale;
+  ctx.fillStyle = node.roleColor || '#A855F7';
+  if (isSelected) {
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5 / scale;
+  } else if (isHovered) {
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.5 / scale;
+  } else if (node.is_preferred_tbr) {
+    ctx.strokeStyle = '#F59E0B'; // Leader Gold Accent Border
+    ctx.lineWidth = 2.2 / scale;
+  } else {
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.lineWidth = 1.2 / scale;
+  }
 
   if (node.shape === 'hexagon') {
     drawCanvasHexagon(ctx, x, y, r);

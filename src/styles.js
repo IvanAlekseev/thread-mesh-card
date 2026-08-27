@@ -387,8 +387,8 @@ export const CARD_STYLES = `
     margin-top: 0.25rem;
     display: block;
   }
-  .stat-pill.tbr .stat-num { color: #F59E0B; }
-  .stat-pill.router .stat-num { color: #60A5FA; }
+  .stat-pill.tbr .stat-num { color: #A855F7; }
+  .stat-pill.router .stat-num { color: #38BDF8; }
   .stat-pill.battery .stat-num { color: #34D399; }
 
   .area-grid {

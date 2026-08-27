@@ -40,7 +40,7 @@ export function getNodeStyle(role, isBorderRouter, isPreferredTbr) {
       roleKey: 'preferred_tbr',
       roleLabel: 'Preferred TBR (Leader)',
       shape: 'hexagon',
-      color: '#F59E0B',
+      color: '#A855F7',
       size: 14,
     };
   }
@@ -48,8 +48,8 @@ export function getNodeStyle(role, isBorderRouter, isPreferredTbr) {
     return {
       roleKey: 'border_router',
       roleLabel: 'Border Router',
-      shape: 'diamond',
-      color: '#38BDF8',
+      shape: 'square',
+      color: '#A855F7',
       size: 13,
     };
   }
@@ -57,9 +57,9 @@ export function getNodeStyle(role, isBorderRouter, isPreferredTbr) {
     return {
       roleKey: 'router',
       roleLabel: 'Mesh Router (Mains)',
-      shape: 'square',
-      color: '#2563EB',
-      size: 15,
+      shape: 'circle',
+      color: '#06B6D4',
+      size: 11.5,
     };
   }
   return {
@@ -67,7 +67,7 @@ export function getNodeStyle(role, isBorderRouter, isPreferredTbr) {
     roleLabel: 'Sleepy End Device (Battery)',
     shape: 'circle',
     color: '#10B981',
-    size: 9,
+    size: 8.5,
   };
 }
 

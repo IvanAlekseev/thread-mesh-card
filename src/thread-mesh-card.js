@@ -311,7 +311,7 @@ class ThreadMeshCard extends HTMLElement {
                   <div class="legend-modal-item">
                     <span class="legend-modal-icon">
                       <svg width="14" height="14" viewBox="0 0 24 24">
-                        <polygon points="12,2 21,7.2 21,17.8 12,23 3,17.8 3,7.2" fill="#F59E0B" stroke="#ffffff" stroke-width="2"/>
+                        <polygon points="12,2 21,7.2 21,17.8 12,23 3,17.8 3,7.2" fill="#A855F7" stroke="#F59E0B" stroke-width="2.5"/>
                       </svg>
                     </span>
                     <span>Preferred TBR (Leader)</span>
@@ -320,7 +320,7 @@ class ThreadMeshCard extends HTMLElement {
                   <div class="legend-modal-item">
                     <span class="legend-modal-icon">
                       <svg width="14" height="14" viewBox="0 0 24 24">
-                        <polygon points="12,2 22,12 12,22 2,12" fill="#38BDF8" stroke="#ffffff" stroke-width="2"/>
+                        <rect x="3" y="3" width="18" height="18" rx="4" fill="#A855F7" stroke="#ffffff" stroke-width="2"/>
                       </svg>
                     </span>
                     <span>Border Router (TBR)</span>
@@ -329,7 +329,7 @@ class ThreadMeshCard extends HTMLElement {
                   <div class="legend-modal-item">
                     <span class="legend-modal-icon">
                       <svg width="13" height="13" viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="18" height="18" rx="4" fill="#2563EB" stroke="#ffffff" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="9" fill="#06B6D4" stroke="#ffffff" stroke-width="2"/>
                       </svg>
                     </span>
                     <span>Router (Mains Plug/Switch)</span>
@@ -338,7 +338,7 @@ class ThreadMeshCard extends HTMLElement {
                   <div class="legend-modal-item">
                     <span class="legend-modal-icon">
                       <svg width="12" height="12" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="9" fill="#10B981" stroke="#ffffff" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="8" fill="#10B981" stroke="#ffffff" stroke-width="2"/>
                       </svg>
                     </span>
                     <span>Sleepy End Device (Battery)</span>
@@ -507,19 +507,21 @@ class ThreadMeshCard extends HTMLElement {
 
         const isGood = link.quality === 'Strong' || (link.rssi !== undefined && link.rssi >= -75);
         const isMed = link.quality === 'Medium' || (link.rssi !== undefined && link.rssi >= -82 && link.rssi < -75);
-        const qualityColor = link.color || (isGood ? '#cbd5e1' : (isMed ? '#f59e0b' : '#f87171'));
-        const qualityText = link.quality || (isGood ? 'Strong Link (Thread Mesh)' : (isMed ? 'Medium Link (Thread Mesh)' : 'Weak Link (Thread Mesh)'));
-        const rssiText = link.rssi !== undefined ? `${link.rssi} dBm` : '--';
-        const lqiText = link.lqi !== undefined && link.lqi <= 3 ? `LQI ${link.lqi}/3` : '';
+        const qualityColor = link.color || (isGood ? '#4ade80' : (isMed ? '#f59e0b' : '#f87171'));
+        const qualityText = isGood ? 'Strong' : (isMed ? 'Medium' : 'Weak');
+        const lqiVal = link.lqi !== undefined && link.lqi <= 3 ? link.lqi : 3;
+        const rssiText = link.rssi !== undefined ? ` • ${link.rssi} dBm` : '';
 
-        return `<div style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 7px 11px; font-family: system-ui, -apple-system, sans-serif; font-size: 11.5px; color: #f8fafc; box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: none; text-align: left; line-height: 1.35;">
-          <div style="font-weight: 700; color: ${qualityColor}; font-size: 11.5px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-            <span>📶</span> ${qualityText}
+        return `<div style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 8px 12px; font-family: system-ui, -apple-system, sans-serif; font-size: 11.5px; color: #f8fafc; box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: none; text-align: left; line-height: 1.4;">
+          <div style="font-weight: 700; color: #f8fafc; font-size: 12px; margin-bottom: 2px;">
+            ${srcName}${srcArea} ↔ ${tgtName}${tgtArea}
           </div>
-          <div style="color: #cbd5e1; font-weight: 500; font-size: 11px;">${srcName}${srcArea} ↔ ${tgtName}${tgtArea}</div>
-          <div style="color: #94a3b8; font-size: 10.5px; margin-top: 3px; display: flex; gap: 8px;">
-            <span>Signal: <strong style="color: #f8fafc;">${rssiText}</strong></span>
-            ${lqiText ? `<span>• Quality: <strong style="color: #f8fafc;">${lqiText}</strong></span>` : ''}
+          <div style="color: #94a3b8; font-size: 10.5px; margin-bottom: 5px;">
+            Network: <strong style="color: #cbd5e1;">Thread (NEST-PAN-7BF9)</strong>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 5px;">
+            <div>${srcName} → ${tgtName}: <strong style="color: ${qualityColor};">${qualityText} (LQI ${lqiVal}${rssiText})</strong></div>
+            <div>${tgtName} → ${srcName}: <strong style="color: ${qualityColor};">${qualityText} (LQI ${lqiVal}${rssiText})</strong></div>
           </div>
         </div>`;
       })

@@ -1,7 +1,7 @@
 {
   "name": "thread-mesh-card",
-  "version": "0.3.0",
-  "description": "Interactive Thread mesh topology visualizer for Home Assistant Lovelace",
+  "version": "0.3.1",
+  "description": "Interactive Thread 1.4 & Matter Mesh Topology Lovelace Card for Home Assistant",
   "main": "dist/thread-mesh-card.js",
   "module": "src/thread-mesh-card.js",
   "scripts": {

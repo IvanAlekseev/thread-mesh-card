@@ -1,5 +1,5 @@
 /**
- * Thread Mesh Topology Card for Home Assistant v0.3.0
+ * Thread Mesh Topology Card for Home Assistant v0.3.1
  * (c) 2026 Ivan Alekseev (MIT License)
  */
 (function () {
@@ -10,7 +10,7 @@
   // Module: constants.js
   // ===========================================================================
 
-  const CARD_VERSION = '0.3.0';
+  const CARD_VERSION = '0.3.1';
   const SCRIPT_URL = '/local/libs/force-graph.min.js';
   const AREA_PALETTE = [
     { bg: 'rgba(239, 68, 68, 0.12)', border: '#EF4444', text: '#F87171' },   // Coral / Red
@@ -429,8 +429,8 @@
       margin-top: 0.25rem;
       display: block;
     }
-    .stat-pill.tbr .stat-num { color: #F59E0B; }
-    .stat-pill.router .stat-num { color: #60A5FA; }
+    .stat-pill.tbr .stat-num { color: #A855F7; }
+    .stat-pill.router .stat-num { color: #38BDF8; }
     .stat-pill.battery .stat-num { color: #34D399; }
 
     .area-grid {
@@ -702,7 +702,7 @@
         roleKey: 'preferred_tbr',
         roleLabel: 'Preferred TBR (Leader)',
         shape: 'hexagon',
-        color: '#F59E0B',
+        color: '#A855F7',
         size: 14,
       };
     }
@@ -710,8 +710,8 @@
       return {
         roleKey: 'border_router',
         roleLabel: 'Border Router',
-        shape: 'diamond',
-        color: '#38BDF8',
+        shape: 'square',
+        color: '#A855F7',
         size: 13,
       };
     }
@@ -719,9 +719,9 @@
       return {
         roleKey: 'router',
         roleLabel: 'Mesh Router (Mains)',
-        shape: 'square',
-        color: '#2563EB',
-        size: 15,
+        shape: 'circle',
+        color: '#06B6D4',
+        size: 11.5,
       };
     }
     return {
@@ -729,7 +729,7 @@
       roleLabel: 'Sleepy End Device (Battery)',
       shape: 'circle',
       color: '#10B981',
-      size: 9,
+      size: 8.5,
     };
   }
   function formatTime(isoStr) {
@@ -1249,12 +1249,12 @@
       const tgtNode = nodeMap.get(tgtId);
       if (!srcNode || !tgtNode) return;
 
-      if (srcNode.shape === 'circle' && tgtNode.shape !== 'circle') {
+      if (srcNode.role === 'end_device' && tgtNode.role !== 'end_device') {
         srcNode._parent = tgtNode;
         parentByChild.set(srcId, tgtNode);
         if (!childrenByParent.has(tgtId)) childrenByParent.set(tgtId, []);
         childrenByParent.get(tgtId).push(srcNode);
-      } else if (tgtNode.shape === 'circle' && srcNode.shape !== 'circle') {
+      } else if (tgtNode.role === 'end_device' && srcNode.role !== 'end_device') {
         tgtNode._parent = srcNode;
         parentByChild.set(tgtId, srcNode);
         if (!childrenByParent.has(srcId)) childrenByParent.set(srcId, []);
@@ -1282,7 +1282,7 @@
 
     // 3. Position Routers & TBRs in inner ring (38% R)
     const routersByArea = new Map();
-    nodes.filter(n => n.shape !== 'circle').forEach(rNode => {
+    nodes.filter(n => n.role !== 'end_device').forEach(rNode => {
       const aName = rNode.areaName || 'Unassigned';
       if (!routersByArea.has(aName)) routersByArea.set(aName, []);
       routersByArea.get(aName).push(rNode);
@@ -1309,7 +1309,7 @@
     });
 
     // 4. Position Leaf End Devices with Wide Parent-Relative Outward Fan-Out (58% - 72% R)
-    const leaves = nodes.filter(n => n.shape === 'circle');
+    const leaves = nodes.filter(n => n.role === 'end_device');
     const leavesByParent = new Map();
     const orphanLeaves = [];
 
@@ -1407,7 +1407,7 @@
     const boxHeight = fontSize1 + fontSize2 + (10 / s);
 
     let angle;
-    if (node.shape === 'circle') {
+    if (node.role === 'end_device') {
       if (node._parent && typeof node._parent.x === 'number' && typeof node._parent.y === 'number') {
         const dx = (node.x || 0) - node._parent.x;
         const dy = (node.y || 0) - node._parent.y;
@@ -1438,7 +1438,7 @@
     let boxCenterY = (node.y || 0) + dist * sinA;
 
     // Add subtle sibling vertical stagger if multiple leaves share a parent
-    if (node.shape === 'circle' && node._siblingTotal > 1) {
+    if (node.role === 'end_device' && node._siblingTotal > 1) {
       if (node._siblingIdx === 0) {
         boxCenterY -= (3 / s);
       } else if (node._siblingIdx === node._siblingTotal - 1) {
@@ -1466,9 +1466,20 @@
     const y = node.y || 0;
 
     // 1. Render Node Shape
-    ctx.fillStyle = node.roleColor || '#38bdf8';
-    ctx.strokeStyle = isSelected ? '#ffffff' : (isHovered ? '#38bdf8' : 'rgba(15, 23, 42, 0.85)');
-    ctx.lineWidth = (isSelected || isHovered ? 2.5 : 1.2) / scale;
+    ctx.fillStyle = node.roleColor || '#A855F7';
+    if (isSelected) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5 / scale;
+    } else if (isHovered) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5 / scale;
+    } else if (node.is_preferred_tbr) {
+      ctx.strokeStyle = '#F59E0B'; // Leader Gold Accent Border
+      ctx.lineWidth = 2.2 / scale;
+    } else {
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.lineWidth = 1.2 / scale;
+    }
 
     if (node.shape === 'hexagon') {
       drawCanvasHexagon(ctx, x, y, r);
@@ -1596,7 +1607,7 @@
     const openHaBtn = root.getElementById('hudOpenHaBtn');
 
     if (iconEl) {
-      iconEl.textContent = node.is_preferred_tbr ? '👑' : (node.is_border_router ? '🔷' : (node.shape === 'square' ? '🔌' : '📡'));
+      iconEl.textContent = node.is_preferred_tbr ? '👑' : (node.is_border_router ? '🟣' : (node.role === 'router' ? '🔌' : '📡'));
     }
     if (titleEl) titleEl.textContent = node.shortName || node.friendlyName;
     if (areaEl) {
@@ -1617,7 +1628,7 @@
     });
 
     const isBatteryDevice = (node.battery !== null && node.battery !== undefined) || 
-                            node.shape === 'circle' || 
+                            node.role === 'end_device' || 
                             node.role === 'battery_leaf' || 
                             (node.roleLabel && node.roleLabel.toLowerCase().includes('battery')) ||
                             (node.roleLabel && node.roleLabel.toLowerCase().includes('sleepy'));
@@ -1683,7 +1694,7 @@
     }).length;
 
     if (densityEl) {
-      densityEl.textContent = `${node.thread_version || 'Thread 1.3'} • ${neighborCount} neighbor${neighborCount === 1 ? '' : 's'}`;
+      densityEl.textContent = `Thread (NEST-PAN-7BF9) • ${neighborCount} neighbor${neighborCount === 1 ? '' : 's'}`;
     }
 
     if (openHaBtn) {
@@ -2209,7 +2220,7 @@
                     <div class="legend-modal-item">
                       <span class="legend-modal-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24">
-                          <polygon points="12,2 21,7.2 21,17.8 12,23 3,17.8 3,7.2" fill="#F59E0B" stroke="#ffffff" stroke-width="2"/>
+                          <polygon points="12,2 21,7.2 21,17.8 12,23 3,17.8 3,7.2" fill="#A855F7" stroke="#F59E0B" stroke-width="2.5"/>
                         </svg>
                       </span>
                       <span>Preferred TBR (Leader)</span>
@@ -2218,7 +2229,7 @@
                     <div class="legend-modal-item">
                       <span class="legend-modal-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24">
-                          <polygon points="12,2 22,12 12,22 2,12" fill="#38BDF8" stroke="#ffffff" stroke-width="2"/>
+                          <rect x="3" y="3" width="18" height="18" rx="4" fill="#A855F7" stroke="#ffffff" stroke-width="2"/>
                         </svg>
                       </span>
                       <span>Border Router (TBR)</span>
@@ -2227,7 +2238,7 @@
                     <div class="legend-modal-item">
                       <span class="legend-modal-icon">
                         <svg width="13" height="13" viewBox="0 0 24 24">
-                          <rect x="3" y="3" width="18" height="18" rx="4" fill="#2563EB" stroke="#ffffff" stroke-width="2"/>
+                          <circle cx="12" cy="12" r="9" fill="#06B6D4" stroke="#ffffff" stroke-width="2"/>
                         </svg>
                       </span>
                       <span>Router (Mains Plug/Switch)</span>
@@ -2236,7 +2247,7 @@
                     <div class="legend-modal-item">
                       <span class="legend-modal-icon">
                         <svg width="12" height="12" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="9" fill="#10B981" stroke="#ffffff" stroke-width="2"/>
+                          <circle cx="12" cy="12" r="8" fill="#10B981" stroke="#ffffff" stroke-width="2"/>
                         </svg>
                       </span>
                       <span>Sleepy End Device (Battery)</span>
@@ -2405,19 +2416,21 @@
 
           const isGood = link.quality === 'Strong' || (link.rssi !== undefined && link.rssi >= -75);
           const isMed = link.quality === 'Medium' || (link.rssi !== undefined && link.rssi >= -82 && link.rssi < -75);
-          const qualityColor = link.color || (isGood ? '#cbd5e1' : (isMed ? '#f59e0b' : '#f87171'));
-          const qualityText = link.quality || (isGood ? 'Strong Link (Thread Mesh)' : (isMed ? 'Medium Link (Thread Mesh)' : 'Weak Link (Thread Mesh)'));
-          const rssiText = link.rssi !== undefined ? `${link.rssi} dBm` : '--';
-          const lqiText = link.lqi !== undefined && link.lqi <= 3 ? `LQI ${link.lqi}/3` : '';
+          const qualityColor = link.color || (isGood ? '#4ade80' : (isMed ? '#f59e0b' : '#f87171'));
+          const qualityText = isGood ? 'Strong' : (isMed ? 'Medium' : 'Weak');
+          const lqiVal = link.lqi !== undefined && link.lqi <= 3 ? link.lqi : 3;
+          const rssiText = link.rssi !== undefined ? ` • ${link.rssi} dBm` : '';
 
-          return `<div style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 7px 11px; font-family: system-ui, -apple-system, sans-serif; font-size: 11.5px; color: #f8fafc; box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: none; text-align: left; line-height: 1.35;">
-            <div style="font-weight: 700; color: ${qualityColor}; font-size: 11.5px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-              <span>📶</span> ${qualityText}
+          return `<div style="background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 8px 12px; font-family: system-ui, -apple-system, sans-serif; font-size: 11.5px; color: #f8fafc; box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: none; text-align: left; line-height: 1.4;">
+            <div style="font-weight: 700; color: #f8fafc; font-size: 12px; margin-bottom: 2px;">
+              ${srcName}${srcArea} ↔ ${tgtName}${tgtArea}
             </div>
-            <div style="color: #cbd5e1; font-weight: 500; font-size: 11px;">${srcName}${srcArea} ↔ ${tgtName}${tgtArea}</div>
-            <div style="color: #94a3b8; font-size: 10.5px; margin-top: 3px; display: flex; gap: 8px;">
-              <span>Signal: <strong style="color: #f8fafc;">${rssiText}</strong></span>
-              ${lqiText ? `<span>• Quality: <strong style="color: #f8fafc;">${lqiText}</strong></span>` : ''}
+            <div style="color: #94a3b8; font-size: 10.5px; margin-bottom: 5px;">
+              Network: <strong style="color: #cbd5e1;">Thread (NEST-PAN-7BF9)</strong>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #cbd5e1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 5px;">
+              <div>${srcName} → ${tgtName}: <strong style="color: ${qualityColor};">${qualityText} (LQI ${lqiVal}${rssiText})</strong></div>
+              <div>${tgtName} → ${srcName}: <strong style="color: ${qualityColor};">${qualityText} (LQI ${lqiVal}${rssiText})</strong></div>
             </div>
           </div>`;
         })
