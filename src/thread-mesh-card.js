@@ -562,12 +562,21 @@ class ThreadMeshCard extends HTMLElement {
           return 'rgba(255, 255, 255, 0.05)';
         }
 
-        // 2. Hovering directly over this link (when modals and inspector are closed) -> full brightness
+        // 2. Hovering over a node -> Highlight all connections attached to hovered node!
+        if (!this._isModalOpen && !this._selectedNodeId && this._hoveredNode) {
+          const isConnectedToHovered = (srcId === this._hoveredNode.id || tgtId === this._hoveredNode.id);
+          if (isConnectedToHovered) {
+            return getAuthenticColor(d, true);
+          }
+          return 'rgba(255, 255, 255, 0.12)';
+        }
+
+        // 3. Hovering directly over this link (when modals and inspector are closed) -> full brightness
         if (!this._isModalOpen && !this._selectedNodeId && this._hoveredLink && (this._hoveredLink.id === edgeId || this._hoveredLink === d)) {
           return getAuthenticColor(d, true);
         }
 
-        // 3. Normal permanent state (Full brightness, zero casual dimming)
+        // 4. Normal permanent state (Full brightness, zero casual dimming)
         if (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) {
           return '#38BDF8';
         }
@@ -584,6 +593,14 @@ class ThreadMeshCard extends HTMLElement {
         if (this._activeRoute && this._activeRoute.pathEdges.length > 0) {
           const isPathEdge = this._activeRoute.pathEdges.some(pe => pe.id === edgeId || (pe.source === srcId && pe.target === tgtId) || (pe.source === tgtId && pe.target === srcId));
           if (isPathEdge) return (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) ? 3.8 : 3.2;
+          return 0.8;
+        }
+
+        if (!this._isModalOpen && !this._selectedNodeId && this._hoveredNode) {
+          const isConnectedToHovered = (srcId === this._hoveredNode.id || tgtId === this._hoveredNode.id);
+          if (isConnectedToHovered) {
+            return (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) ? 3.8 : 3.2;
+          }
           return 0.8;
         }
 
@@ -608,8 +625,13 @@ class ThreadMeshCard extends HTMLElement {
         node.fy = node.y;
       })
       .onNodeDragEnd((node) => {
-        node.fx = node.x;
-        node.fy = node.y;
+        const dist = Math.hypot((node.x || 0) - node.__startX, (node.y || 0) - node.__startY);
+        if (dist > 5) {
+          this._customPositions.set(node.id, { x: node.x, y: node.y });
+          this._saveCustomPositions();
+        }
+        delete node.__startX;
+        delete node.__startY;
         this._saveUserLayout();
         if (node.__startX !== undefined) {
           const dx = (node.x || 0) - node.__startX;
@@ -652,12 +674,13 @@ class ThreadMeshCard extends HTMLElement {
           ctx.fill();
         }
       })
-      // 100% Scale-Relative Zero-Pixel Canvas Drawing
       .nodeCanvasObject((node, ctx, globalScale) => {
-        const isHoverActive = !this._isModalOpen && !this._selectedNodeId;
+        const isHoverActive = !this._isModalOpen && !this._selectedNodeId && Boolean(this._hoveredNode);
+        const hoveredNeighbors = isHoverActive ? this._getNeighborNodeIds(this._hoveredNode.id) : [];
         const state = {
           selectedNodeId: this._selectedNodeId,
-          hoveredNodeId: isHoverActive ? this._hoveredNode?.id : null,
+          hoveredNodeId: isHoverActive ? this._hoveredNode.id : null,
+          hoveredNeighbors: hoveredNeighbors,
           activePathNodes: this._activeRoute?.pathNodes || [],
           isModalOpen: this._isModalOpen,
         };

@@ -1454,12 +1454,18 @@
   function drawNodeWithDynamicLabel(node, ctx, scale, state) {
     const isSelected = state.selectedNodeId === node.id;
     const isHovered = !state.isModalOpen && !state.selectedNodeId && state.hoveredNodeId === node.id;
+    const isHoveredNeighbor = !state.isModalOpen && !state.selectedNodeId && state.hoveredNeighbors && state.hoveredNeighbors.includes(node.id);
 
-    // Dimming is ONLY applied when an active route path is selected by click!
-    const isDimmed = Boolean(state.activePathNodes && state.activePathNodes.length > 0 && !state.activePathNodes.includes(node.id));
+    // Dimming is applied for active route click selection OR hovered node neighbor focus
+    let isDimmed = false;
+    if (state.activePathNodes && state.activePathNodes.length > 0) {
+      isDimmed = !state.activePathNodes.includes(node.id);
+    } else if (state.hoveredNodeId) {
+      isDimmed = !isHovered && !isHoveredNeighbor;
+    }
 
     ctx.save();
-    ctx.globalAlpha = isDimmed ? 0.15 : 1.0;
+    ctx.globalAlpha = isDimmed ? 0.25 : 1.0;
 
     const r = (node.size || 8) * (isHovered ? 1.12 : 1.0);
     const x = node.x || 0;
@@ -2471,12 +2477,21 @@
             return 'rgba(255, 255, 255, 0.05)';
           }
 
-          // 2. Hovering directly over this link (when modals and inspector are closed) -> full brightness
+          // 2. Hovering over a node -> Highlight all connections attached to hovered node!
+          if (!this._isModalOpen && !this._selectedNodeId && this._hoveredNode) {
+            const isConnectedToHovered = (srcId === this._hoveredNode.id || tgtId === this._hoveredNode.id);
+            if (isConnectedToHovered) {
+              return getAuthenticColor(d, true);
+            }
+            return 'rgba(255, 255, 255, 0.12)';
+          }
+
+          // 3. Hovering directly over this link (when modals and inspector are closed) -> full brightness
           if (!this._isModalOpen && !this._selectedNodeId && this._hoveredLink && (this._hoveredLink.id === edgeId || this._hoveredLink === d)) {
             return getAuthenticColor(d, true);
           }
 
-          // 3. Normal permanent state (Full brightness, zero casual dimming)
+          // 4. Normal permanent state (Full brightness, zero casual dimming)
           if (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) {
             return '#38BDF8';
           }
@@ -2493,6 +2508,14 @@
           if (this._activeRoute && this._activeRoute.pathEdges.length > 0) {
             const isPathEdge = this._activeRoute.pathEdges.some(pe => pe.id === edgeId || (pe.source === srcId && pe.target === tgtId) || (pe.source === tgtId && pe.target === srcId));
             if (isPathEdge) return (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) ? 3.8 : 3.2;
+            return 0.8;
+          }
+
+          if (!this._isModalOpen && !this._selectedNodeId && this._hoveredNode) {
+            const isConnectedToHovered = (srcId === this._hoveredNode.id || tgtId === this._hoveredNode.id);
+            if (isConnectedToHovered) {
+              return (d.isBackbone || (isTbrNode(src) && isTbrNode(tgt))) ? 3.8 : 3.2;
+            }
             return 0.8;
           }
 
@@ -2517,8 +2540,13 @@
           node.fy = node.y;
         })
         .onNodeDragEnd((node) => {
-          node.fx = node.x;
-          node.fy = node.y;
+          const dist = Math.hypot((node.x || 0) - node.__startX, (node.y || 0) - node.__startY);
+          if (dist > 5) {
+            this._customPositions.set(node.id, { x: node.x, y: node.y });
+            this._saveCustomPositions();
+          }
+          delete node.__startX;
+          delete node.__startY;
           this._saveUserLayout();
           if (node.__startX !== undefined) {
             const dx = (node.x || 0) - node.__startX;
@@ -2561,12 +2589,13 @@
             ctx.fill();
           }
         })
-        // 100% Scale-Relative Zero-Pixel Canvas Drawing
         .nodeCanvasObject((node, ctx, globalScale) => {
-          const isHoverActive = !this._isModalOpen && !this._selectedNodeId;
+          const isHoverActive = !this._isModalOpen && !this._selectedNodeId && Boolean(this._hoveredNode);
+          const hoveredNeighbors = isHoverActive ? this._getNeighborNodeIds(this._hoveredNode.id) : [];
           const state = {
             selectedNodeId: this._selectedNodeId,
-            hoveredNodeId: isHoverActive ? this._hoveredNode?.id : null,
+            hoveredNodeId: isHoverActive ? this._hoveredNode.id : null,
+            hoveredNeighbors: hoveredNeighbors,
             activePathNodes: this._activeRoute?.pathNodes || [],
             isModalOpen: this._isModalOpen,
           };

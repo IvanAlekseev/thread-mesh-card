@@ -225,12 +225,18 @@ export function calculateNodeLabelBounds(node, scale, ctx) {
 export function drawNodeWithDynamicLabel(node, ctx, scale, state) {
   const isSelected = state.selectedNodeId === node.id;
   const isHovered = !state.isModalOpen && !state.selectedNodeId && state.hoveredNodeId === node.id;
+  const isHoveredNeighbor = !state.isModalOpen && !state.selectedNodeId && state.hoveredNeighbors && state.hoveredNeighbors.includes(node.id);
 
-  // Dimming is ONLY applied when an active route path is selected by click!
-  const isDimmed = Boolean(state.activePathNodes && state.activePathNodes.length > 0 && !state.activePathNodes.includes(node.id));
+  // Dimming is applied for active route click selection OR hovered node neighbor focus
+  let isDimmed = false;
+  if (state.activePathNodes && state.activePathNodes.length > 0) {
+    isDimmed = !state.activePathNodes.includes(node.id);
+  } else if (state.hoveredNodeId) {
+    isDimmed = !isHovered && !isHoveredNeighbor;
+  }
 
   ctx.save();
-  ctx.globalAlpha = isDimmed ? 0.15 : 1.0;
+  ctx.globalAlpha = isDimmed ? 0.25 : 1.0;
 
   const r = (node.size || 8) * (isHovered ? 1.12 : 1.0);
   const x = node.x || 0;
