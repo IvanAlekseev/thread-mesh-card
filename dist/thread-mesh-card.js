@@ -1101,13 +1101,32 @@
         manufacturer = dev.manufacturer || 'Matter';
 
         const devEntities = entitiesByDevice[dev.id] || [];
-        const battEnt = devEntities.find(e => 
-          e.original_device_class === 'battery' || 
-          e.entity_id.includes('battery')
-        );
-        if (battEnt && cardInstance._hass.states[battEnt.entity_id]) {
-          const val = parseFloat(cardInstance._hass.states[battEnt.entity_id].state);
-          if (!isNaN(val)) battery = Math.round(val);
+
+        // Priority 1: Entity with unit '%' and device_class 'battery' (or non-voltage battery sensor)
+        let battEnt = devEntities.find(e => {
+          const st = cardInstance._hass?.states?.[e.entity_id];
+          const unit = st?.attributes?.unit_of_measurement;
+          const devClass = st?.attributes?.device_class || e.original_device_class;
+          const id = e.entity_id.toLowerCase();
+
+          if (id.endsWith('_voltage') || id.endsWith('_type') || id.endsWith('_state') || id.endsWith('_runtime')) return false;
+          return (devClass === 'battery' && unit === '%') || (unit === '%' && id.includes('battery'));
+        });
+
+        // Priority 2: Fallback to any entity with device_class battery (excluding voltage)
+        if (!battEnt) {
+          battEnt = devEntities.find(e => {
+            const id = e.entity_id.toLowerCase();
+            return !id.endsWith('_voltage') && !id.endsWith('_type') && (e.original_device_class === 'battery' || id.endsWith('_battery') || id.endsWith('_battery_level'));
+          });
+        }
+
+        if (battEnt && cardInstance._hass?.states?.[battEnt.entity_id]) {
+          const st = cardInstance._hass.states[battEnt.entity_id];
+          const val = parseFloat(st.state);
+          if (!isNaN(val) && val >= 0 && val <= 100) {
+            battery = Math.round(val);
+          }
         }
       } else {
         friendlyName = `Thread Node ${rawId}`;
